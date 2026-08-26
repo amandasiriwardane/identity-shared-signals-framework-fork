@@ -2,6 +2,7 @@ package org.wso2.identity.event.ssf.publisher.internal.component;
 
 import org.wso2.carbon.identity.webhook.management.api.service.WebhookManagementService;
 import org.wso2.carbon.identity.webhook.metadata.api.service.EventAdapterMetadataService;
+import org.wso2.identity.event.ssf.publisher.internal.config.SSFAdapterConfiguration;
 
 /**
  * SSF Outbound Event Adapter service component's value holder.
@@ -12,6 +13,7 @@ public class SSFAdapterDataHolder {
 
     private WebhookManagementService webhookManagementService;
     private EventAdapterMetadataService eventAdapterMetadataService;
+    private SSFAdapterConfiguration adapterConfiguration;
 
     private SSFAdapterDataHolder() {
 
@@ -20,6 +22,16 @@ public class SSFAdapterDataHolder {
     public static SSFAdapterDataHolder getInstance() {
 
         return instance;
+    }
+
+    public SSFAdapterConfiguration getAdapterConfiguration() {
+
+        return adapterConfiguration;
+    }
+
+    public void setAdapterConfiguration(SSFAdapterConfiguration adapterConfiguration) {
+
+        this.adapterConfiguration = adapterConfiguration;
     }
 
     /**

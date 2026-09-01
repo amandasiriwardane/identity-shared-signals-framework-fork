@@ -12,6 +12,8 @@ public class SSFAdapterConstants {
      */
     public static class Http {
 
+        public static final String SET_CONTENT_TYPE = "application/secevent+jwt";
+        public static final String SECEVENT_JWT_TYPE = "secevent+jwt";
         public static final Integer DEFAULT_HTTP_CONNECTION_TIMEOUT = 300;
         public static final Integer DEFAULT_HTTP_READ_TIMEOUT = 300;
         public static final Integer DEFAULT_HTTP_CONNECTION_REQUEST_TIMEOUT = 300;

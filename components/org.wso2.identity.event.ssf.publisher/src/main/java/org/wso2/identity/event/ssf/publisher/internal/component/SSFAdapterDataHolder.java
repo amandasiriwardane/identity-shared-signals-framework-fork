@@ -14,6 +14,7 @@ public class SSFAdapterDataHolder {
     private WebhookManagementService webhookManagementService;
     private EventAdapterMetadataService eventAdapterMetadataService;
     private SSFAdapterConfiguration adapterConfiguration;
+    private ClientManager clientManager;
 
     private SSFAdapterDataHolder() {
 
@@ -22,6 +23,16 @@ public class SSFAdapterDataHolder {
     public static SSFAdapterDataHolder getInstance() {
 
         return instance;
+    }
+
+    public ClientManager getClientManager() {
+
+        return clientManager;
+    }
+
+    public void setClientManager(ClientManager clientManager) {
+
+        this.clientManager = clientManager;
     }
 
     public SSFAdapterConfiguration getAdapterConfiguration() {

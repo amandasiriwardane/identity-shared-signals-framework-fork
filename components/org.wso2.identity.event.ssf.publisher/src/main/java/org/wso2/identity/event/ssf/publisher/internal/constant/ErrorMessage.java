@@ -18,7 +18,9 @@ public enum ErrorMessage {
             "Failed to generate a JWS signature for the security event token. " +
                     "Ensure that the tenant's signing key is configured correctly."),
     ERROR_PUBLISHING_EVENT("SSFADAPTER-65005", "Error while publishing event.",
-            "Error while publishing event to the receiver's endpoint using the SSF adapter.");
+            "Error while publishing event to the receiver's endpoint using the SSF adapter."),
+    ERROR_ACTIVE_WEBHOOKS_RETRIEVAL("SSFADAPTER-65006", "Error while retrieving active webhooks.",
+            "Error while retrieving active webhooks.");
 
     private final String code;
     private final String message;
@@ -52,3 +54,4 @@ public enum ErrorMessage {
         return code + " : " + message;
     }
 }
+

@@ -187,7 +187,6 @@ public class SSFEventPublisherImpl implements EventPublisher {
                 PrivilegedCarbonContext.startTenantFlow();
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(tenantId);
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain);
-
                 if (throwable == null) {
                     int status = response.getStatusLine().getStatusCode();
                     if (status >= 200 && status < 300) {

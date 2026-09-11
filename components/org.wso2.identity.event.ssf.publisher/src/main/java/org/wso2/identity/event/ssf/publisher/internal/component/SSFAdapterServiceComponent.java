@@ -26,7 +26,7 @@ import static org.wso2.identity.event.ssf.publisher.internal.constant.SSFAdapter
         immediate = true)
 public class SSFAdapterServiceComponent {
 
-    private static final Log log = LogFactory.getLog(SSFAdapterServiceComponent.class);
+    private static final Log LOG = LogFactory.getLog(SSFAdapterServiceComponent.class);
     private static final String ERROR_CODE_ADAPTER_NOT_FOUND = "WEBHOOKMETA-66011";
 
     @Activate
@@ -41,15 +41,15 @@ public class SSFAdapterServiceComponent {
                 context.getBundleContext().registerService(EventPublisher.class.getName(),
                         eventPublisherService, null);
                 SSFAdapterDataHolder.getInstance().setClientManager(new ClientManager());
-                log.debug("Successfully activated the SSF adapter service.");
+                LOG.debug("Successfully activated the SSF adapter service.");
             }
         } catch (Throwable e) {
             if (e instanceof WebhookMetadataException &&
                     ERROR_CODE_ADAPTER_NOT_FOUND.equals(((WebhookMetadataException) e).getErrorCode())) {
-                log.warn("SSF adapter is not enabled. " +
+                LOG.warn("SSF adapter is not enabled. " +
                         "Please enable the SSF adapter in the configuration file to use the SSF event publisher.");
             } else {
-                log.error("Error while activating the SSF adapter service: " + e.getMessage(), e);
+                LOG.error("Error while activating the SSF adapter service: " + e.getMessage(), e);
             }
         }
     }
@@ -58,7 +58,7 @@ public class SSFAdapterServiceComponent {
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
-        log.debug("Successfully de-activated the SSF adapter service.");
+        LOG.debug("Successfully de-activated the SSF adapter service.");
     }
 
     @Reference(
@@ -88,12 +88,12 @@ public class SSFAdapterServiceComponent {
     protected void setEventAdapterMetadataService(EventAdapterMetadataService eventAdapterMetadataService) {
 
         SSFAdapterDataHolder.getInstance().setEventAdapterMetadataService(eventAdapterMetadataService);
-        log.debug("EventAdapterMetadataService set in SSFAdapterDataHolder bundle.");
+        LOG.debug("EventAdapterMetadataService set in SSFAdapterDataHolder bundle.");
     }
 
     protected void unsetEventAdapterMetadataService(EventAdapterMetadataService eventAdapterMetadataService) {
 
         SSFAdapterDataHolder.getInstance().setEventAdapterMetadataService(null);
-        log.debug("EventAdapterMetadataService unset in SSFAdapterDataHolder bundle.");
+        LOG.debug("EventAdapterMetadataService unset in SSFAdapterDataHolder bundle.");
     }
 }

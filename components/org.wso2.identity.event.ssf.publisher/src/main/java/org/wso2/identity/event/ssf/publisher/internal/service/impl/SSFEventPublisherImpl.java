@@ -48,7 +48,7 @@ import static org.wso2.identity.event.ssf.publisher.internal.util.SSFCorrelation
  */
 public class SSFEventPublisherImpl implements EventPublisher {
 
-    private static final Log log = LogFactory.getLog(SSFEventPublisherImpl.class);
+    private static final Log LOG = LogFactory.getLog(SSFEventPublisherImpl.class);
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
@@ -118,7 +118,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
             try {
                 claimsSet = buildClaimsSet(eventPayload, webhook);
             } catch (ParseException e) {
-                log.error("Failed to build claims for webhook: " + webhook.getId() +
+                LOG.error("Failed to build claims for webhook: " + webhook.getId() +
                         ". Event will not be published to the endpoint: " + url, e);
                 printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                         SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT, DiagnosticLog.ResultStatus.FAILED,
@@ -161,7 +161,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
             printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                     SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT, DiagnosticLog.ResultStatus.FAILED,
                     "Failed to construct signed HTTP request for SSF publish.");
-            log.debug("Error constructing signed HTTP request for SSF publish. No retries will be attempted.", e);
+            LOG.debug("Error constructing signed HTTP request for SSF publish. No retries will be attempted.", e);
             return;
         }
 
@@ -196,21 +196,21 @@ public class SSFEventPublisherImpl implements EventPublisher {
                         printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                                 SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT,
                                 DiagnosticLog.ResultStatus.SUCCESS, "Event data published to endpoint.");
-                        log.debug("SSF event published successfully. Response code: " + status +
+                        LOG.debug("SSF event published successfully. Response code: " + status +
                                 ", Endpoint: " + url);
                     } else if (status >= 300 && status < 400) {
                         printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                                 SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT,
                                 DiagnosticLog.ResultStatus.FAILED,
                                 "Endpoint returned a redirection. Status code: " + status);
-                        log.warn("Endpoint returned a redirection. Status code: " + status + ". Url: " + url);
+                        LOG.warn("Endpoint returned a redirection. Status code: " + status + ". Url: " + url);
                         // No retry for redirection.
                     } else if (status >= 400 && status < 500) {
                         printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                                 SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT,
                                 DiagnosticLog.ResultStatus.FAILED,
                                 "Endpoint returned a client error. Status code: " + status);
-                        log.warn("Endpoint returned a client error. Status code: " + status + ". Url: " + url);
+                        LOG.warn("Endpoint returned a client error. Status code: " + status + ". Url: " + url);
                         // No retry for client error.
                     } else {
                         printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
@@ -218,7 +218,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
                                 DiagnosticLog.ResultStatus.FAILED,
                                 "Received server error from endpoint. Status code: " + status +
                                         ". Retrying... (" + retriesLeft + " attempts left)");
-                        log.warn("Received server error from endpoint. Status code: " + status + ". Url: " + url);
+                        LOG.warn("Received server error from endpoint. Status code: " + status + ". Url: " + url);
                         if (retriesLeft > 0) {
                             sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, tenantDomain,
                                     tenantId, url, claimsSet, retriesLeft - 1);
@@ -231,7 +231,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
                                     DiagnosticLog.ResultStatus.FAILED,
                                     "Failed to publish event data to endpoint. Status code: " + status +
                                             ". Maximum retries reached.");
-                            log.warn("Failed to publish SSF event to endpoint: " + url + ". Maximum retries reached.");
+                            LOG.warn("Failed to publish SSF event to endpoint: " + url + ". Maximum retries reached.");
                         }
                     }
                 } else {
@@ -256,7 +256,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
                                 SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT,
                                 DiagnosticLog.ResultStatus.FAILED,
                                 errorMsg + " Retrying... (" + retriesLeft + " attempts left)");
-                        log.warn(errorMsg + " Url: " + url + " Retrying... (" + retriesLeft + " attempts left)");
+                        LOG.warn(errorMsg + " Url: " + url + " Retrying... (" + retriesLeft + " attempts left)");
                         sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, tenantDomain,
                                 tenantId, url, claimsSet, retriesLeft - 1);
                     } else {
@@ -266,8 +266,8 @@ public class SSFEventPublisherImpl implements EventPublisher {
                         printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                                 SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT,
                                 DiagnosticLog.ResultStatus.FAILED, errorMsg);
-                        log.warn(errorMsg + " Url: " + url);
-                        log.debug(errorMsg, throwable);
+                        LOG.warn(errorMsg + " Url: " + url);
+                        LOG.debug(errorMsg, throwable);
                     }
                 }
             } finally {

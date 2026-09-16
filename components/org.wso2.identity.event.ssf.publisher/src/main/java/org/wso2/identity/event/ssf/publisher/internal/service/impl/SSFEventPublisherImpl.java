@@ -160,9 +160,18 @@ public class SSFEventPublisherImpl implements EventPublisher {
     private JWTClaimsSet buildClaimsSet(SecurityEventTokenPayload eventPayload, Webhook webhook)
             throws ParseException {
 
+        SecurityEventTokenPayload payloadWithAudience = SecurityEventTokenPayload.builder()
+            .iss(eventPayload.getIss())
+            .jti(eventPayload.getJti())
+            .iat(eventPayload.getIat())
+            .rci(eventPayload.getRci())
+            .subId(eventPayload.getSubId())
+            .events(eventPayload.getEvents())
+            .aud("mock-audience")          // real value once the DAO/properties built
+            .build();
+
         @SuppressWarnings("unchecked")
-        Map<String, Object> claimsMap = MAPPER.convertValue(eventPayload, Map.class);
-        claimsMap.put("aud", "mock-audience");
+        Map<String, Object> claimsMap = MAPPER.convertValue(payloadWithAudience, Map.class);
         return JWTClaimsSet.parse(claimsMap);
     }
 

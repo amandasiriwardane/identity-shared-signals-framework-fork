@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.wso2</groupId>
+        <artifactId>wso2</artifactId>
+        <version>1.4</version>
+    </parent>
+
+    <groupId>org.wso2.identity.ssf</groupId>
+    <modelVersion>4.0.0</modelVersion>
+    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>identity-shared-signal-framework</artifactId>
+
+    <packaging>pom</packaging>
+    <name>Shared Signals Framework Support for WSO2 Identity Server</name>
+    <description>SSF/CAEP stream management, discovery, and event delivery for WSO2 Identity Server</description>
+    <url>http://wso2.org</url>
+
+    <modules>
+        <module>components/org.wso2.identity.ssf.stream.management</module>
+        <module>components/org.wso2.identity.ssf.endpoint</module>
+        <module>components/org.wso2.identity.event.ssf.publisher</module>
+    </modules>
+
+    <properties>
+        <carbon.identity.framework.version>7.10.156</carbon.identity.framework.version>
+        <httpasyncclient.version>4.1.3.wso2v1</httpasyncclient.version>
+        <commons-lang.wso2.version>2.6.0.wso2v1</commons-lang.wso2.version>
+        <nimbusds.version>10.3.0.wso2v1</nimbusds.version>
+        <json-smart.version>2.4.7</json-smart.version>
+        <httpclient.httpcomponents.wso2.version>4.5.13.wso2v1</httpclient.httpcomponents.wso2.version>
+        <commons-logging.version>1.2</commons-logging.version>
+        <carbon.kernel.version>4.12.34</carbon.kernel.version>
+        <jackson.version>2.18.3</jackson.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <carbon.kernel.package.import.version.range>[4.6.0, 5.0.0)</carbon.kernel.package.import.version.range>
+        <commons-lang.wso2.osgi.version.range>[2.6.0,3.0.0)</commons-lang.wso2.osgi.version.range>
+        <org.apache.commons.logging.range>[1.2.0,2.0.0)</org.apache.commons.logging.range>
+        <httpasyncclient.version.range>[4.0.0, 5.0.0)</httpasyncclient.version.range>
+        <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
+        <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
+        <carbon.identity.framework.imp.pkg.version.range>[5.20.90, 8.0.0)</carbon.identity.framework.imp.pkg.version.range>
+        <nimbusds.osgi.version.range>[10.3.0,11.0.0)</nimbusds.osgi.version.range>
+        <org.slf4j.imp.pkg.version.range>[1.5.5,2.0.0)</org.slf4j.imp.pkg.version.range>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wso2.carbon</groupId>
+                <artifactId>org.wso2.carbon.core</artifactId>
+                <version>${carbon.kernel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.central.log.mgt</artifactId>
+                <version>${carbon.identity.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.event.publisher</artifactId>
+                <version>7.11.186-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.webhook.metadata</artifactId>
+                <version>${carbon.identity.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.webhook.management</artifactId>
+                <version>${carbon.identity.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
+                <version>${carbon.identity.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
+                <artifactId>httpasyncclient</artifactId>
+                <version>${httpasyncclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-lang.wso2</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.wso2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.orbit.com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbusds.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json-smart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.core</artifactId>
+                <version>${carbon.identity.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.httpcomponents.wso2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

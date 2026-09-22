@@ -9,7 +9,7 @@
     <groupId>org.wso2.identity.ssf</groupId>
     <modelVersion>4.0.0</modelVersion>
     <version>1.0.0-SNAPSHOT</version>
-    <artifactId>identity-shared-signal-framework</artifactId>
+    <artifactId>identity-shared-signals-framework</artifactId>
 
     <packaging>pom</packaging>
     <name>Shared Signals Framework Support for WSO2 Identity Server</name>

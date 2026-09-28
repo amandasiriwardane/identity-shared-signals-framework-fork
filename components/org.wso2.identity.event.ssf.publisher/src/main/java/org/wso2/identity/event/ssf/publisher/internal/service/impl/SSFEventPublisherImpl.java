@@ -153,12 +153,13 @@ public class SSFEventPublisherImpl implements EventPublisher {
     /**
      * Build the JWT claims for a single webhook, from the shared event payload.
      *
-     * TODO: 'aud' is currently a hardcoded mock value for development/testing only.
-     * Have to Replace with a real lookup once Stream Management persists the audience
-     * a companion DAO call keyed by webhook.getId() (if stored in a separate table).
+     * TODO: 'aud' has to be replaced with a real lookup once Stream Management persists
+     * the audience
      */
     private JWTClaimsSet buildClaimsSet(SecurityEventTokenPayload eventPayload, Webhook webhook)
             throws ParseException {
+
+        final String audience = null;
 
         SecurityEventTokenPayload payloadWithAudience = SecurityEventTokenPayload.builder()
             .iss(eventPayload.getIss())
@@ -167,7 +168,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
             .rci(eventPayload.getRci())
             .subId(eventPayload.getSubId())
             .events(eventPayload.getEvents())
-            .aud("mock-audience")          // real value once the DAO/properties built
+            .aud(audience)
             .build();
 
         @SuppressWarnings("unchecked")

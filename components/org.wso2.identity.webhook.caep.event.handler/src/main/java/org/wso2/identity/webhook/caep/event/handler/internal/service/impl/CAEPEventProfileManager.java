@@ -56,6 +56,6 @@ public class CAEPEventProfileManager implements EventProfileManager {
                 .channel(String.valueOf(channelUri))
                 .eventProfile(Constants.EventSchema.CAEP.name())
                 .build();
-    
+
     }
 }

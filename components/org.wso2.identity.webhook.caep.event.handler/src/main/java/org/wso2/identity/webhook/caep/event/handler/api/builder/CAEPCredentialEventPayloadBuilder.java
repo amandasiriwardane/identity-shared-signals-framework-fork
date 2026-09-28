@@ -12,7 +12,6 @@ import org.wso2.identity.webhook.common.event.handler.api.builder.CredentialEven
 import org.wso2.identity.webhook.common.event.handler.api.constants.Constants;
 import org.wso2.identity.webhook.common.event.handler.api.model.EventData;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,29 +20,22 @@ import java.util.Map;
 public class CAEPCredentialEventPayloadBuilder implements CredentialEventPayloadBuilder {
 
     private static final Log LOG = LogFactory.getLog(CAEPCredentialEventPayloadBuilder.class);
-    
+
     private static final String UPDATE_CHANGE_TYPE = "update";
 
     @Override
     public EventPayload buildCredentialUpdateEvent(EventData eventData) throws IdentityEventException {
-        
+
         final Map<String, Object> params = eventData.getEventParams();
         long eventTimeStamp = CAEPPayloadUtils.resolveEventTimeStamp(params);
-        
+
         Flow flow = IdentityContext.getThreadLocalIdentityContext().getCurrentFlow();
         String initiatingEntity = CAEPPayloadUtils.resolveInitiatingEntity(flow);
         String credentialType = CAEPPayloadUtils.resolveCredentialType(flow);
 
-        Map<String, String> reasonAdmin = new HashMap<>();
-        Map<String, String> reasonUser = new HashMap<>();
-        reasonAdmin.put("en", "Credential Updated");
-        reasonUser.put("en", "Your credential was updated");
-
         return new CAEPCredentialChangeEventPayload.Builder()
                 .eventTimeStamp(eventTimeStamp)
                 .initiatingEntity(initiatingEntity)
-                .reasonAdmin(reasonAdmin)
-                .reasonUser(reasonUser)
                 .credentialType(credentialType)
                 .changeType(UPDATE_CHANGE_TYPE)
                 .friendlyName(null)
@@ -56,4 +48,3 @@ public class CAEPCredentialEventPayloadBuilder implements CredentialEventPayload
         return Constants.EventSchema.CAEP;
     }
 }
-

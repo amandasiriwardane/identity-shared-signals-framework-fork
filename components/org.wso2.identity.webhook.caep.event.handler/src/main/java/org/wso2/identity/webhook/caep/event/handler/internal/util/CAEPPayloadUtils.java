@@ -22,13 +22,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthHistory;
-import org.wso2.carbon.identity.core.context.model.Flow; 
+import org.wso2.carbon.identity.core.context.model.Flow;
 import org.wso2.identity.webhook.common.event.handler.api.model.EventData;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List; 
+import java.util.List;
 import java.util.Map;
 
 public class CAEPPayloadUtils {
@@ -37,14 +37,12 @@ public class CAEPPayloadUtils {
 
     private static final String USER_PERSONA = "user";
     private static final String ADMIN_PERSONA = "admin";
-    private static final String SYSTEM_PERSONA = "system";
-    private static final String POLICY_PERSONA = "policy";
 
     private static final String PASSWORD_CREDENTIAL_TYPE = "password";
     private static final String PASSKEY_CREDENTIAL_TYPE ="fido2-platform";
 
     private static final Log LOG = LogFactory.getLog(CAEPPayloadUtils.class);
-    
+
     private static final Map<String, String> AUTHENTICATOR_NAME_TO_AMR = createAuthenticatorAmrMap();
 
     private static Map<String, String> createAuthenticatorAmrMap() {
@@ -111,11 +109,8 @@ public class CAEPPayloadUtils {
                 return USER_PERSONA;
             case ADMIN:
                 return ADMIN_PERSONA;
-            // Due to CAEP definitions, "SYSTEM" initiatingPersona corresponds to "policy" initiatingEntity value.
             case APPLICATION:
-                return SYSTEM_PERSONA;
-            case SYSTEM:
-                return POLICY_PERSONA;
+                return ADMIN_PERSONA;
             default:
                 return null;
         }

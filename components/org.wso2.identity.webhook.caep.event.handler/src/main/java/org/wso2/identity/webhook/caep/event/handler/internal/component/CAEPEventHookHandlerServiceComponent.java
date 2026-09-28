@@ -52,7 +52,7 @@ public class CAEPEventHookHandlerServiceComponent {
                     new CAEPSessionEventPayloadBuilder(), null);
             context.getBundleContext().registerService(CredentialEventPayloadBuilder.class.getName(),
                     new CAEPCredentialEventPayloadBuilder(), null);
-            
+
         } catch (Exception e) {
             log.error("Error while activating CAEP event handler.", e);
         }

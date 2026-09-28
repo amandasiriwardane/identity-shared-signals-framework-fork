@@ -72,4 +72,3 @@ public enum ErrorMessage {
         return code + " : " + message;
     }
 }
-

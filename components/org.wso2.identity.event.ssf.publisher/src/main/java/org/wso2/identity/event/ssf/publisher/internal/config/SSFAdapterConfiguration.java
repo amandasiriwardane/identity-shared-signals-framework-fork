@@ -135,7 +135,7 @@ public class SSFAdapterConfiguration {
      * Returns the http connection request timeout.
      *
      * @return http connection request timeout.
-     */    
+     */
     public int getHttpConnectionRequestTimeout() {
 
         return httpConnectionRequestTimeout;
@@ -211,4 +211,3 @@ public class SSFAdapterConfiguration {
         return executorQueueCapacity;
     }
 }
-

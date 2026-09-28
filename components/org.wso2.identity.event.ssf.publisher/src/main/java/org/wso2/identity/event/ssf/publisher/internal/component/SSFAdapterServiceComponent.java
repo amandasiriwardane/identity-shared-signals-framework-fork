@@ -72,7 +72,6 @@ public class SSFAdapterServiceComponent {
         }
     }
 
-
     @Deactivate
     protected void deactivate(ComponentContext context) {
 

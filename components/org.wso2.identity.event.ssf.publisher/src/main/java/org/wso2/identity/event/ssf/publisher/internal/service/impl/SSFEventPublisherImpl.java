@@ -118,7 +118,6 @@ public class SSFEventPublisherImpl implements EventPublisher {
         final Map<String, String> copiedMDCSnapshot =
                 MDC.getCopyOfContextMap() != null ? MDC.getCopyOfContextMap() : Collections.emptyMap();
 
-
         final List<Webhook> activeWebhooks;
         try {
             activeWebhooks = SSFAdapterDataHolder.getInstance().getWebhookManagementService()
@@ -141,7 +140,7 @@ public class SSFEventPublisherImpl implements EventPublisher {
                 printPublisherDiagnosticLog(eventProfileName, eventProfileUri, events, url,
                         SSFAdapterConstants.LogConstants.ActionIDs.PUBLISH_EVENT, DiagnosticLog.ResultStatus.FAILED,
                         "Failed to build claims for webhook. Event will not be published to the endpoint: " + url);
-            continue;
+                continue;
             }
 
             sendWithRetries(eventProfileName, eventProfileUri, events, copiedMDCSnapshot,
@@ -248,8 +247,8 @@ public class SSFEventPublisherImpl implements EventPublisher {
                                         ". Retrying... (" + retriesLeft + " attempts left)");
                         LOG.warn("Received server error from endpoint. Status code: " + status + ". Url: " + url);
                         if (retriesLeft > 0) {
-                            sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, tenantDomain,
-                                    tenantId, url, claimsSet, retriesLeft - 1);
+                            sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, 
+                                    tenantDomain, tenantId, url, claimsSet, retriesLeft - 1);
                         } else {
                             handleResponseCorrelationLog(request, requestStartTime,
                                     SSFCorrelationLogUtils.RequestStatus.FAILED.getStatus(),
@@ -285,8 +284,8 @@ public class SSFEventPublisherImpl implements EventPublisher {
                                 DiagnosticLog.ResultStatus.FAILED,
                                 errorMsg + " Retrying... (" + retriesLeft + " attempts left)");
                         LOG.warn(errorMsg + " Url: " + url + " Retrying... (" + retriesLeft + " attempts left)");
-                        sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, tenantDomain,
-                                tenantId, url, claimsSet, retriesLeft - 1);
+                        sendWithRetries(eventProfileName, eventProfileUri, events, mdcSnapshot, correlationId, 
+                                tenantDomain, tenantId, url, claimsSet, retriesLeft - 1);
                     } else {
                         errorMsg = errorMsg + (shouldRetry ? " Maximum retries reached." : "");
                         handleResponseCorrelationLog(request, requestStartTime,

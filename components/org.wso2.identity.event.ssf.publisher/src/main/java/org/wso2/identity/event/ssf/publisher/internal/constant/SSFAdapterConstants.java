@@ -42,7 +42,7 @@ public class SSFAdapterConstants {
         public static final Integer DEFAULT_HTTP_EXECUTOR_CORE_POOL_SIZE = 5;
         public static final Integer DEFAULT_HTTP_EXECUTOR_MAX_POOL_SIZE = 15;
         public static final Integer DEFAULT_HTTP_EXECUTOR_QUEUE_CAPACITY = 150;
-        
+
         private Http() {
 
         }

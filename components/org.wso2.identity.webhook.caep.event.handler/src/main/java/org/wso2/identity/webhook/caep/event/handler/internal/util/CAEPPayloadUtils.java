@@ -18,6 +18,7 @@
 
 package org.wso2.identity.webhook.caep.event.handler.internal.util;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.StringUtils;
@@ -117,14 +118,18 @@ public class CAEPPayloadUtils {
     }
 
     /**
-     * Resolve the fp_ua claim from the request's User-Agent header.
+     * Resolve the fp_ua claim as a SHA-256 hex fingerprint of the request's User-Agent header.
      *
      * @param eventData Event data.
-     * @return User-Agent header value, or null if unavailable.
+     * @return Hex-encoded SHA-256 of the User-Agent header, or null if unavailable.
      */
     public static String resolveFpUa(EventData eventData) {
 
-        return eventData.getRequest() != null ? eventData.getRequest().getHeader("User-Agent") : null;
+        if (eventData.getRequest() == null) {
+            return null;
+        }
+        String userAgent = eventData.getRequest().getHeader("User-Agent");
+        return StringUtils.isNotBlank(userAgent) ? DigestUtils.sha256Hex(userAgent) : null;
     }
 
     /**

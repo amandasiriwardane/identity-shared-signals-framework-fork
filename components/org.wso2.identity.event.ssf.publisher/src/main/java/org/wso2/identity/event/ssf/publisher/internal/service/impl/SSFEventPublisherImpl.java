@@ -74,25 +74,25 @@ public class SSFEventPublisherImpl implements EventPublisher {
     @Override
     public String getAssociatedAdapter() {
 
-        return SSFAdapterConstants.SSF_ADAPTER_NAME;
-    }
-
-    @Override
-    public List<String> getSupportedEventProfiles() {
-
-        return Collections.singletonList("CAEP");
+        return SSFAdapterConstants.ASSOCIATED_ADAPTER_NAME;
     }
 
     @Override
     public void publish(SecurityEventTokenPayload eventPayload, EventContext eventContext)
             throws EventPublisherException {
 
+        if (!SSFAdapterConstants.CAEP_EVENT_PROFILE.equals(eventContext.getEventProfileName())) {
+            return;
+        }
         makeAsyncAPICall(eventPayload, eventContext);
     }
 
     @Override
     public boolean canHandleEvent(EventContext eventContext) throws EventPublisherException {
 
+        if (!SSFAdapterConstants.CAEP_EVENT_PROFILE.equals(eventContext.getEventProfileName())) {
+            return false;
+        }
         try {
             final List<Webhook> activeWebhooks = SSFAdapterDataHolder.getInstance().getWebhookManagementService()
                     .getActiveWebhooks(eventContext.getEventProfileName(), eventContext.getEventProfileVersion(),

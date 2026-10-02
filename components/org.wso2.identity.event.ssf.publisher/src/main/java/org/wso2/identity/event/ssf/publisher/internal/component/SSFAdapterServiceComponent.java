@@ -34,7 +34,7 @@ import org.wso2.carbon.identity.webhook.metadata.api.service.EventAdapterMetadat
 import org.wso2.identity.event.ssf.publisher.internal.config.SSFAdapterConfiguration;
 import org.wso2.identity.event.ssf.publisher.internal.service.impl.SSFEventPublisherImpl;
 
-import static org.wso2.identity.event.ssf.publisher.internal.constant.SSFAdapterConstants.SSF_ADAPTER_NAME;
+import static org.wso2.identity.event.ssf.publisher.internal.constant.SSFAdapterConstants.ASSOCIATED_ADAPTER_NAME;
 
 /**
  * SSF Outbound Event Adapter service component.
@@ -53,7 +53,7 @@ public class SSFAdapterServiceComponent {
         try {
             SSFAdapterDataHolder.getInstance().setAdapterConfiguration(new SSFAdapterConfiguration(
                     SSFAdapterDataHolder.getInstance().getEventAdapterMetadataService()
-                            .getAdapterByName(SSF_ADAPTER_NAME).getProperties()));
+                            .getAdapterByName(ASSOCIATED_ADAPTER_NAME).getProperties()));
             if (SSFAdapterDataHolder.getInstance().getAdapterConfiguration().isAdapterEnabled()) {
                 SSFEventPublisherImpl eventPublisherService = new SSFEventPublisherImpl();
                 context.getBundleContext().registerService(EventPublisher.class.getName(),

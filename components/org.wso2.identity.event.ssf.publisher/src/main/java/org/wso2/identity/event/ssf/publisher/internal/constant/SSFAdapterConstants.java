@@ -23,7 +23,10 @@ package org.wso2.identity.event.ssf.publisher.internal.constant;
  */
 public class SSFAdapterConstants {
 
-    public static final String SSF_ADAPTER_NAME = "ssfpublisher";
+    // SSF rides on the same underlying delivery adapter as the HTTP publisher - must match
+    // org.wso2.identity.event.http.publisher.internal.constant.HTTPAdapterConstants.HTTP_ADAPTER_NAME.
+    public static final String ASSOCIATED_ADAPTER_NAME = "httppublisher";
+    public static final String CAEP_EVENT_PROFILE = "CAEP";
 
     /**
      * SSF Adapter related constants.

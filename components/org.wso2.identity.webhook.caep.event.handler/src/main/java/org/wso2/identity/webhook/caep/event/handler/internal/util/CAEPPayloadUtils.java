@@ -182,4 +182,15 @@ public class CAEPPayloadUtils {
         }
         return PASSWORD_CREDENTIAL_TYPE;
     }
+
+    /**
+     * Convert an epoch-millisecond timestamp to epoch seconds, as CAEP's event_timestamp require
+     *
+     * @param epochMillis Epoch time in milliseconds.
+     * @return Epoch time in seconds.
+     */
+    public static long toEpochSeconds(long epochMillis) {
+
+        return epochMillis / 1000;
+    }
 }

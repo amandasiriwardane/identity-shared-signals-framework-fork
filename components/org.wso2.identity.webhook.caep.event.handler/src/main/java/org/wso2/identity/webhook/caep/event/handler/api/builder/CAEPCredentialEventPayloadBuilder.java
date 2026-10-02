@@ -27,7 +27,7 @@ public class CAEPCredentialEventPayloadBuilder implements CredentialEventPayload
     public EventPayload buildCredentialUpdateEvent(EventData eventData) throws IdentityEventException {
 
         final Map<String, Object> params = eventData.getEventParams();
-        long eventTimeStamp = CAEPPayloadUtils.resolveEventTimeStamp(params);
+        long eventTimeStamp = CAEPPayloadUtils.toEpochSeconds(CAEPPayloadUtils.resolveEventTimeStamp(params));
 
         Flow flow = IdentityContext.getThreadLocalIdentityContext().getCurrentFlow();
         String initiatingEntity = CAEPPayloadUtils.resolveInitiatingEntity(flow);

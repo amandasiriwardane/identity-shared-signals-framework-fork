@@ -50,7 +50,7 @@ public class CAEPSessionEventPayloadBuilder implements SessionEventPayloadBuilde
     public EventPayload buildSessionRevokedEvent(EventData eventData) throws IdentityEventException {
 
         final Map<String, Object> params = eventData.getEventParams();
-        long eventTimeStamp = CAEPPayloadUtils.resolveEventTimeStamp(params);
+        long eventTimeStamp = CAEPPayloadUtils.toEpochSeconds(CAEPPayloadUtils.resolveEventTimeStamp(params));
         String initiatingEntity = null;
 
         Flow flow = IdentityContext.getThreadLocalIdentityContext().getCurrentFlow();
@@ -80,6 +80,7 @@ public class CAEPSessionEventPayloadBuilder implements SessionEventPayloadBuilde
         if (eventTimeStamp == null) {
             eventTimeStamp = CAEPPayloadUtils.resolveEventTimeStamp(params);
         }
+        eventTimeStamp = CAEPPayloadUtils.toEpochSeconds(eventTimeStamp);
         String initiatingEntity = null;
 
         Flow flow = IdentityContext.getThreadLocalIdentityContext().getCurrentFlow();
@@ -119,6 +120,7 @@ public class CAEPSessionEventPayloadBuilder implements SessionEventPayloadBuilde
         if (eventTimeStamp == null) {
             eventTimeStamp = CAEPPayloadUtils.resolveEventTimeStamp(params);
         }
+        eventTimeStamp = CAEPPayloadUtils.toEpochSeconds(eventTimeStamp);
 
         String initiatingEntity = null;
 

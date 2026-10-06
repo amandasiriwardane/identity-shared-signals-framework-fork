@@ -1,0 +1,562 @@
+openapi: 3.0.0
+x-gen-include-req-res: true
+info:
+  version: v1
+  title: WSO2 Identity Server - SSF Stream Management Rest API
+  description: >
+    The SSF Stream Management REST API provides a standardized interface to manage Shared
+    Signals Framework (SSF) event streams within WSO2 Identity Server, as defined by the SSF
+    Stream Configuration and Stream Status APIs (OpenID Shared Signals Framework 1.0, Section 8).
+    A stream describes how CAEP security events are delivered to a receiver, and is persisted
+    internally as a webhook.
+
+
+    Per spec, both endpoints below bind the stream identifier as a query parameter for read/delete
+    operations, and as a request body field for operations that write configuration data - never
+    as a URL path segment.
+servers:
+  - url: "https://{server-url}/t/{tenant-domain}/api/server/v1"
+    variables:
+      server-url:
+        default: "localhost:9443"
+      tenant-domain:
+        default: carbon.super
+
+security:
+  - BasicAuth: []
+  - OAuth2: []
+
+paths:
+  /ssf/stream:
+    get:
+      summary: Get Stream(s)
+      description: >
+        Get a single stream's configuration by its stream_id query parameter, or - if stream_id
+        is omitted - every stream's configuration for the tenant.
+
+
+        <b>Scope(Permission) required:</b> `ssf.read`
+      operationId: getStreams
+      tags:
+        - SSF Stream
+      parameters:
+        - name: stream_id
+          in: query
+          required: false
+          description: Stream ID. If omitted, every stream for the tenant is returned.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            A single StreamResponse if stream_id was given, otherwise a StreamList.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamList'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream?stream_id={streamId}' \
+              -H 'Authorization: Bearer <token>'
+
+    post:
+      summary: Create Stream
+      description: "Create a new SSF event stream. \n\n <b>Scope(Permission) required:</b> `ssf.manage` \n\n"
+      operationId: createStream
+      tags:
+        - SSF Stream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequest'
+      responses:
+        '201':
+          description: Stream Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location --request POST 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream' \
+              -H 'Authorization: Bearer <token>' \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "delivery": {
+                  "method": "urn:ietf:rfc:8935",
+                  "endpoint_url": "https://receiver.example.com/events"
+                },
+                "events_requested": ["https://schemas.openid.net/secevent/caep/event-type/session-revoked"],
+                "description": "My stream"
+              }'
+
+    put:
+      summary: Replace Stream
+      description: >
+        Fully replace a stream's Receiver-Supplied configuration. The stream is identified by
+        the stream_id field in the request body.
+
+
+        <b>Scope(Permission) required:</b> `ssf.manage`
+      operationId: replaceStream
+      tags:
+        - SSF Stream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequest'
+      responses:
+        '200':
+          description: Stream Replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location --request PUT 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream' \
+              -H 'Authorization: Bearer <token>' \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "stream_id": "eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c",
+                "delivery": {
+                  "method": "urn:ietf:rfc:8935",
+                  "endpoint_url": "https://receiver.example.com/events"
+                },
+                "events_requested": ["https://schemas.openid.net/secevent/caep/event-type/session-revoked"]
+              }'
+
+    patch:
+      summary: Update Stream
+      description: >
+        Partially update a stream - only Receiver-Supplied fields present on the request are
+        changed. The stream is identified by the stream_id field in the request body.
+
+
+        <b>Scope(Permission) required:</b> `ssf.manage`
+      operationId: updateStream
+      tags:
+        - SSF Stream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequest'
+      responses:
+        '200':
+          description: Stream Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location --request PATCH 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream' \
+              -H 'Authorization: Bearer <token>' \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "stream_id": "eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c",
+                "description": "Updated description"
+              }'
+
+    delete:
+      summary: Delete Stream
+      description: >
+        Delete a stream, identified by its stream_id query parameter.
+
+
+        <b>Scope(Permission) required:</b> `ssf.manage`
+      operationId: deleteStream
+      tags:
+        - SSF Stream
+      parameters:
+        - name: stream_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Stream Deleted
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location --request DELETE 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream?stream_id={streamId}' \
+              -H 'Authorization: Bearer <token>'
+
+  /ssf/stream/status:
+    get:
+      summary: Get Stream Status
+      description: >
+        Get a stream's current status, identified by its stream_id query parameter.
+
+
+        <b>Scope(Permission) required:</b> `ssf.read`
+      operationId: getStatus
+      tags:
+        - SSF Stream
+      parameters:
+        - name: stream_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream/status?stream_id={streamId}' \
+              -H 'Authorization: Bearer <token>'
+
+    post:
+      summary: Update Stream Status
+      description: >
+        Enable or disable a stream, identified by the stream_id field in the request body. Only
+        "enabled" and "disabled" are supported; "paused" is a valid value per the SSF spec but is
+        rejected here, since it only has meaning for poll-based delivery.
+
+
+        <b>Scope(Permission) required:</b> `ssf.manage`
+      operationId: updateStatus
+      tags:
+        - SSF Stream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusRequest'
+      responses:
+        '200':
+          description: Status Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Stream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        x-codeSamples:
+          - lang: Curl
+            source: |
+              curl --location --request POST 'https://localhost:9443/t/carbon.super/api/server/v1/ssf/stream/status' \
+              -H 'Authorization: Bearer <token>' \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "stream_id": "eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c",
+                "status": "disabled",
+                "reason": "pausing for maintenance"
+              }'
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://localhost:9443/oauth2/authorize'
+          tokenUrl: 'https://localhost:9443/oauth2/token'
+          scopes:
+            ssf.read: Read SSF streams
+            ssf.manage: Create, update, delete and verify SSF streams
+
+  schemas:
+    Delivery:
+      type: object
+      required:
+        - method
+        - endpoint_url
+      properties:
+        method:
+          type: string
+          description: The delivery method URI.
+          example: urn:ietf:rfc:8935
+        endpoint_url:
+          type: string
+          description: The endpoint events are delivered to.
+          example: https://receiver.example.com/events
+
+    StreamRequest:
+      type: object
+      properties:
+        stream_id:
+          type: string
+          description: >
+            Stream ID. Ignored on create (a new one is always generated); required on
+            update/replace to identify the stream being modified.
+          example: 'eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c'
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+        events_requested:
+          type: array
+          items:
+            type: string
+          description: The event types the receiver is requesting delivery of.
+          example: ["https://schemas.openid.net/secevent/caep/event-type/session-revoked"]
+        description:
+          type: string
+          description: A human-readable description of this stream.
+          example: My stream
+
+    StreamResponse:
+      type: object
+      properties:
+        stream_id:
+          type: string
+          description: The unique identifier of this stream.
+          example: 'eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c'
+        iss:
+          type: string
+          description: The issuer of the SET tokens delivered on this stream.
+          example: https://localhost:9443
+        aud:
+          type: array
+          items:
+            type: string
+          description: The intended audience(s) of this stream.
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+        events_supported:
+          type: array
+          items:
+            type: string
+          description: The event types the transmitter is capable of delivering.
+        events_requested:
+          type: array
+          items:
+            type: string
+          description: The event types the receiver is requesting delivery of.
+        events_delivered:
+          type: array
+          items:
+            type: string
+          description: The event types the transmitter has agreed to deliver on this stream.
+        description:
+          type: string
+          description: A human-readable description of this stream.
+          example: My stream
+
+    StreamList:
+      type: object
+      properties:
+        streams:
+          type: array
+          items:
+            $ref: '#/components/schemas/StreamResponse'
+
+    StatusRequest:
+      type: object
+      required:
+        - stream_id
+        - status
+      properties:
+        stream_id:
+          type: string
+          description: Stream ID.
+          example: 'eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c'
+        status:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          description: The stream's requested status.
+          example: disabled
+        reason:
+          type: string
+          description: A human-readable reason for the status change.
+          example: pausing for maintenance
+
+    StatusResponse:
+      type: object
+      properties:
+        stream_id:
+          type: string
+          example: 'eeb8c1a2-3f4d-4e5b-8c6f-7d8e9f0a1b2c'
+        status:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          example: disabled
+        reason:
+          type: string
+          example: pausing for maintenance
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: SSFSTREAM-60001
+        message:
+          type: string
+          example: Some error message.
+        description:
+          type: string
+          example: Some error description.
+        traceId:
+          type: string
+          example: e0fbcfeb-3617-43c4-8dd0-7b7d38e13047

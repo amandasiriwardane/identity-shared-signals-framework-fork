@@ -151,14 +151,9 @@ public class SSFEventPublisherImpl implements EventPublisher {
 
     /**
      * Build the JWT claims for a single webhook, from the shared event payload.
-     *
-     * TODO: 'aud' has to be replaced with a real lookup once Stream Management persists
-     * the audience
      */
     private JWTClaimsSet buildClaimsSet(SecurityEventTokenPayload eventPayload, Webhook webhook)
             throws ParseException {
-
-        final String audience = null;
 
         SecurityEventTokenPayload payloadWithAudience = SecurityEventTokenPayload.builder()
             .iss(eventPayload.getIss())
@@ -167,12 +162,33 @@ public class SSFEventPublisherImpl implements EventPublisher {
             .rci(eventPayload.getRci())
             .subId(eventPayload.getSubId())
             .events(eventPayload.getEvents())
-            .aud(audience)
+            .aud(getAudience(webhook))
             .build();
 
         @SuppressWarnings("unchecked")
         Map<String, Object> claimsMap = MAPPER.convertValue(payloadWithAudience, Map.class);
         return JWTClaimsSet.parse(claimsMap);
+    }
+
+    /**
+     * The webhook's configured receiver audience, set by SSF Stream Management at creation time
+     * and stored as a webhook property under the {@code aud} key (see
+     * {@code SSFStreamManagementServiceImpl}, which is the only writer of this property).
+     *
+     * @param webhook The webhook being delivered to.
+     * @return The configured audience, or an empty list if none was set.
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> getAudience(Webhook webhook) {
+
+        Object audProperty = webhook.getProperties().get(SSFAdapterConstants.AUD_PROPERTY_KEY);
+        if (audProperty instanceof List) {
+            return (List<String>) audProperty;
+        }
+        if (audProperty instanceof String) {
+            return Collections.singletonList((String) audProperty);
+        }
+        return Collections.emptyList();
     }
 
     private void sendWithRetries(String eventProfileName, String eventProfileUri, String events,

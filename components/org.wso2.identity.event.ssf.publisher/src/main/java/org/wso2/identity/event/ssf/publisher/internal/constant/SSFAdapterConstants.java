@@ -28,6 +28,11 @@ public class SSFAdapterConstants {
     public static final String ASSOCIATED_ADAPTER_NAME = "httppublisher";
     public static final String CAEP_EVENT_PROFILE = "CAEP";
 
+    // Webhook property key a stream's configured receiver audience is stored under - must match
+    // org.wso2.identity.ssf.stream.management.internal.service.impl.SSFStreamManagementServiceImpl
+    // .AUD_PROPERTY_KEY, the only writer of this property.
+    public static final String AUD_PROPERTY_KEY = "aud";
+
     /**
      * SSF Adapter related constants.
      */

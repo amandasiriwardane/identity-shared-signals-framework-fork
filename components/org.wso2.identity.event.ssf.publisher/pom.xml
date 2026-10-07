@@ -24,6 +24,8 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event.publisher</artifactId>
+            <!-- Pinned ahead - aud (List<String>) not yet in a released version. -->
+            <version>7.11.212-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -32,6 +34,8 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.webhook.management</artifactId>
+            <!-- Pinned ahead - Webhook.properties not yet in a released version. -->
+            <version>7.11.212-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>

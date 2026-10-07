@@ -49,7 +49,7 @@ public class SsfApiServiceImpl implements SsfApiService {
                                   StreamRequest streamRequest) {
 
         return Response.status(Response.Status.CREATED)
-                .entity(serverSSFStreamService.createStream(streamRequest))
+                .entity(serverSSFStreamService.createStream(streamRequest, httpServletRequest))
                 .build();
     }
 
@@ -67,21 +67,21 @@ public class SsfApiServiceImpl implements SsfApiService {
     public Response updateStream(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                   StreamRequest streamRequest) {
 
-        return Response.ok().entity(serverSSFStreamService.updateStream(streamRequest)).build();
+        return Response.ok().entity(serverSSFStreamService.updateStream(streamRequest, httpServletRequest)).build();
     }
 
     @Override
     public Response replaceStream(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                    StreamRequest streamRequest) {
 
-        return Response.ok().entity(serverSSFStreamService.replaceStream(streamRequest)).build();
+        return Response.ok().entity(serverSSFStreamService.replaceStream(streamRequest, httpServletRequest)).build();
     }
 
     @Override
     public Response deleteStream(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                   String streamId) {
 
-        serverSSFStreamService.deleteStream(streamId);
+        serverSSFStreamService.deleteStream(streamId, httpServletRequest);
         return Response.noContent().build();
     }
 

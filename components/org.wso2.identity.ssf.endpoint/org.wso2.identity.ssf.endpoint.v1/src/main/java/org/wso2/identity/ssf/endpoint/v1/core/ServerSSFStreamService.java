@@ -21,7 +21,13 @@ package org.wso2.identity.ssf.endpoint.v1.core;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.identity.core.context.IdentityContext;
+import org.wso2.carbon.identity.auth.service.AuthenticationContext;
+import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.oauth.common.exception.InvalidOAuthClientException;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDAO;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
+import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
+import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.identity.ssf.endpoint.v1.model.Delivery;
 import org.wso2.identity.ssf.endpoint.v1.model.StatusRequest;
 import org.wso2.identity.ssf.endpoint.v1.model.StatusResponse;
@@ -38,6 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.WebApplicationException;
 
@@ -58,15 +65,16 @@ public class ServerSSFStreamService {
     /**
      * Create stream.
      *
-     * @param streamRequest Stream creation request.
+     * @param streamRequest      Stream creation request.
+     * @param httpServletRequest The current HTTP request, used to identify the calling application.
      * @return Created stream.
      */
-    public StreamResponse createStream(StreamRequest streamRequest) {
+    public StreamResponse createStream(StreamRequest streamRequest, HttpServletRequest httpServletRequest) {
 
         try {
             StreamConfiguration configuration = buildStreamConfiguration(streamRequest);
             StreamConfiguration created = ssfStreamManagementService.createStream(configuration,
-                    getReceiverAudience(), getTenantDomain());
+                    getReceiverAudience(httpServletRequest), getTenantDomain());
             return toStreamResponse(created);
         } catch (SSFStreamManagementException e) {
             throw buildAPIError(e);
@@ -108,12 +116,14 @@ public class ServerSSFStreamService {
     /**
      * Partially update a stream.
      *
-     * @param streamRequest Partial update request, must include streamId.
+     * @param streamRequest      Partial update request, must include streamId.
+     * @param httpServletRequest The current HTTP request, used to verify the caller owns this stream.
      * @return The updated stream.
      */
-    public StreamResponse updateStream(StreamRequest streamRequest) {
+    public StreamResponse updateStream(StreamRequest streamRequest, HttpServletRequest httpServletRequest) {
 
         try {
+            verifyStreamOwnership(streamRequest.getStreamId(), httpServletRequest);
             StreamConfiguration configuration = buildStreamConfiguration(streamRequest);
             StreamConfiguration updated = ssfStreamManagementService.updateStream(configuration, getTenantDomain());
             return toStreamResponse(updated);
@@ -125,12 +135,14 @@ public class ServerSSFStreamService {
     /**
      * Fully replace a stream.
      *
-     * @param streamRequest Replacement request, must include streamId.
+     * @param streamRequest      Replacement request, must include streamId.
+     * @param httpServletRequest The current HTTP request, used to verify the caller owns this stream.
      * @return The replaced stream.
      */
-    public StreamResponse replaceStream(StreamRequest streamRequest) {
+    public StreamResponse replaceStream(StreamRequest streamRequest, HttpServletRequest httpServletRequest) {
 
         try {
+            verifyStreamOwnership(streamRequest.getStreamId(), httpServletRequest);
             StreamConfiguration configuration = buildStreamConfiguration(streamRequest);
             StreamConfiguration replaced = ssfStreamManagementService.replaceStream(configuration, getTenantDomain());
             return toStreamResponse(replaced);
@@ -142,11 +154,13 @@ public class ServerSSFStreamService {
     /**
      * Delete a stream.
      *
-     * @param streamId Stream ID.
+     * @param streamId            Stream ID.
+     * @param httpServletRequest  The current HTTP request, used to verify the caller owns this stream.
      */
-    public void deleteStream(String streamId) {
+    public void deleteStream(String streamId, HttpServletRequest httpServletRequest) {
 
         try {
+            verifyStreamOwnership(streamId, httpServletRequest);
             ssfStreamManagementService.deleteStream(streamId, getTenantDomain());
         } catch (SSFStreamManagementException e) {
             throw buildAPIError(e);
@@ -239,22 +253,67 @@ public class ServerSSFStreamService {
     }
 
     /**
-     * The receiver's audience, taken from the {@code aud} claim of its validated access token.
+     * Verify that the caller is one of the receivers this stream was created for, i.e. that the
+     * caller's own resolved audience overlaps with the stream's recorded {@code aud}. This stops
+     * one application from managing another application's stream even when both hold the
+     * {@code ssf.manage} scope.
      *
-     * TODO: not yet wired up - need to confirm how an access token's claims are reached from a
-     * plain JAX-RS resource in this codebase (no existing identity-api-server endpoint does this
-     * today). Returns an empty audience until that mechanism is confirmed.
+     * @param streamId           Stream ID.
+     * @param httpServletRequest The current HTTP request, used to resolve the caller's audience.
+     * @throws SSFStreamManagementException If no stream exists with the given ID.
      */
-    private List<String> getReceiverAudience() {
+    private void verifyStreamOwnership(String streamId, HttpServletRequest httpServletRequest)
+            throws SSFStreamManagementException {
 
-        IdentityContext identityContext = IdentityContext.getThreadLocalIdentityContext();
-        if (identityContext.isApplicationActor()) {
-            LOG.info("DIAGNOSTIC: calling applicationId = " +
-                    identityContext.getApplicationActor().getApplicationId());
-        } else {
-            LOG.info("DIAGNOSTIC: actor is not an application actor.");
+        StreamConfiguration existing = ssfStreamManagementService.getStream(streamId, getTenantDomain());
+        List<String> streamAudience = existing.getAud();
+        List<String> callerAudience = getReceiverAudience(httpServletRequest);
+        boolean authorized = streamAudience != null && callerAudience != null &&
+                streamAudience.stream().anyMatch(callerAudience::contains);
+        if (!authorized) {
+            throw new WebApplicationException("The caller is not authorized to manage this stream.",
+                    Response.status(Response.Status.FORBIDDEN).build());
         }
-        return Collections.emptyList();
+    }
+
+    /**
+     * The receiver's audience - the configured OIDC audience of the OAuth2 application that
+     * authenticated the current request. Defaults to that application's own client ID unless a
+     * custom audience was configured for it.
+     *
+     * The consumer key is reached via the {@code AuthenticationContext} that {@code
+     * AuthenticationValve} (identity-carbon-auth-rest) attaches to the current request as the
+     * "auth-context" attribute - not via {@code IdentityContext}, which doesn't expose it for a
+     * plain Bearer-token REST call (its {@code ApplicationActor} only sets {@code entityId},
+     * which has no public getter in this version).
+     *
+     * @param httpServletRequest The current HTTP request.
+     * @return The application's configured audience, or an empty list if it can't be determined.
+     */
+    private List<String> getReceiverAudience(HttpServletRequest httpServletRequest) {
+
+        Object authContextAttribute = httpServletRequest.getAttribute("auth-context");
+        if (!(authContextAttribute instanceof AuthenticationContext)) {
+            LOG.warn("No AuthenticationContext found on the request; defaulting to an empty audience.");
+            return Collections.emptyList();
+        }
+        AuthenticationContext authenticationContext = (AuthenticationContext) authContextAttribute;
+
+        Object consumerKeyProperty = authenticationContext.getParameter("consumer-key");
+        if (!(consumerKeyProperty instanceof String)) {
+            LOG.warn("No consumer key found in the AuthenticationContext; defaulting to an empty audience.");
+            return Collections.emptyList();
+        }
+        String consumerKey = (String) consumerKeyProperty;
+
+        try {
+            int tenantId = IdentityTenantUtil.getTenantId(getTenantDomain());
+            OAuthAppDO oAuthAppDO = new OAuthAppDAO().getAppInformation(consumerKey, tenantId);
+            return OAuth2Util.getOIDCAudience(consumerKey, oAuthAppDO);
+        } catch (InvalidOAuthClientException | IdentityOAuth2Exception e) {
+            LOG.error("Error while retrieving the configured audience for consumer key: " + consumerKey);
+            return Collections.emptyList();
+        }
     }
 
     private WebApplicationException buildAPIError(SSFStreamManagementException e) {

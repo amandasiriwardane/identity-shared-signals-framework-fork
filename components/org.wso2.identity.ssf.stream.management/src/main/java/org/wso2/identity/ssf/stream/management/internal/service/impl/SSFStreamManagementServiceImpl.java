@@ -29,6 +29,7 @@ import org.wso2.carbon.identity.webhook.management.api.model.Webhook;
 import org.wso2.carbon.identity.webhook.management.api.model.WebhookStatus;
 import org.wso2.carbon.identity.webhook.metadata.api.exception.WebhookMetadataException;
 import org.wso2.carbon.identity.webhook.metadata.api.model.Channel;
+import org.wso2.carbon.identity.webhook.metadata.api.model.Event;
 import org.wso2.carbon.identity.webhook.metadata.api.model.EventProfile;
 import org.wso2.identity.ssf.stream.management.api.exception.SSFStreamManagementClientException;
 import org.wso2.identity.ssf.stream.management.api.exception.SSFStreamManagementException;
@@ -84,7 +85,7 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
                 .eventProfileName(caepProfile.getProfile())
                 .eventProfileUri(caepProfile.getUri())
                 .status(WebhookStatus.ACTIVE)
-                .eventsSubscribed(buildSubscriptions(streamRequest.getEventsRequested()))
+                .eventsSubscribed(buildSubscriptions(streamRequest.getEventsRequested(), caepProfile))
                 .properties(properties)
                 .build();
 
@@ -132,19 +133,65 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
                         "No event profile named " + CAEP_EVENT_PROFILE_NAME + " was found."));
     }
 
-    private List<Subscription> buildSubscriptions(List<String> eventsRequested) {
+    private List<Subscription> buildSubscriptions(List<String> eventsRequested, EventProfile caepProfile)
+            throws SSFStreamManagementException {
 
         if (eventsRequested == null) {
             return Collections.emptyList();
         }
         List<Subscription> subscriptions = new ArrayList<>();
-        for (String channelUri : eventsRequested) {
+        for (String eventUri : eventsRequested) {
             subscriptions.add(Subscription.builder()
-                    .channelUri(channelUri)
+                    .channelUri(resolveChannelUriForEvent(caepProfile, eventUri))
                     .status(SubscriptionStatus.SUBSCRIPTION_ACCEPTED)
                     .build());
         }
         return subscriptions;
+    }
+
+    /**
+     * Find the channel that delivers the given event type, as requested by a caller using the
+     * SSF spec's own event-type URIs (e.g. ".../event-type/session-revoked") - which are distinct
+     * from the channel URIs the underlying webhook subscription model is keyed on.
+     *
+     * @param caepProfile CAEP event profile.
+     * @param eventUri    Event type URI, as sent by the caller.
+     * @return The URI of the channel that delivers this event type.
+     * @throws SSFStreamManagementException If no channel delivers the given event type.
+     */
+    private String resolveChannelUriForEvent(EventProfile caepProfile, String eventUri)
+            throws SSFStreamManagementException {
+
+        for (Channel channel : caepProfile.getChannels()) {
+            for (Event event : channel.getEvents()) {
+                if (event.getEventUri().equalsIgnoreCase(eventUri)) {
+                    return channel.getUri();
+                }
+            }
+        }
+        throw new SSFStreamManagementClientException("SSFSTREAM-60003",
+                "Unsupported event type.", "No channel delivers the event type: " + eventUri);
+    }
+
+    /**
+     * The reverse lookup of {@link #resolveChannelUriForEvent} - given a channel URI (as stored
+     * on a {@code Subscription}), return the event-type URIs of every event that channel delivers.
+     *
+     * @param caepProfile CAEP event profile.
+     * @param channelUri  Channel URI, as stored on a {@code Subscription}.
+     * @return The event type URIs delivered by that channel, or an empty list if the channel is
+     *         unrecognized.
+     */
+    private List<String> resolveEventUrisForChannel(EventProfile caepProfile, String channelUri) {
+
+        for (Channel channel : caepProfile.getChannels()) {
+            if (channel.getUri().equalsIgnoreCase(channelUri)) {
+                return channel.getEvents().stream()
+                        .map(Event::getEventUri)
+                        .collect(Collectors.toList());
+            }
+        }
+        return Collections.emptyList();
     }
 
     private String buildWebhookName(List<String> receiverAudience) {
@@ -160,20 +207,21 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
 
         String iss;
         try {
-            iss = ServiceURLBuilder.create().setTenant(tenantDomain).build(null).getAbsolutePublicUrlWithoutPath();
+            iss = ServiceURLBuilder.create().setTenant(tenantDomain).build().getAbsolutePublicUrlWithoutPath();
         } catch (URLBuilderException e) {
             throw new SSFStreamManagementServerException("SSFSTREAM-65004",
                     "Error while building the issuer URL.", e.getMessage(), e);
         }
 
         List<String> eventsSupported = caepProfile.getChannels().stream()
-                .map(Channel::getUri)
+                .flatMap(channel -> channel.getEvents().stream())
+                .map(Event::getEventUri)
                 .collect(Collectors.toList());
 
         List<String> eventsRequested = new ArrayList<>();
         try {
             for (Subscription subscription : webhook.getEventsSubscribed()) {
-                eventsRequested.add(subscription.getChannelUri());
+                eventsRequested.addAll(resolveEventUrisForChannel(caepProfile, subscription.getChannelUri()));
             }
         } catch (WebhookMgtException e) {
             throw new SSFStreamManagementServerException("SSFSTREAM-65005",
@@ -276,6 +324,7 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
             throws SSFStreamManagementException {
 
         Webhook existing = getStreamWebhook(streamUpdate.getStreamId(), tenantDomain);
+        EventProfile caepProfile = getCaepEventProfile();
 
         String endpoint = existing.getEndpoint();
         if (streamUpdate.getDelivery() != null) {
@@ -285,7 +334,7 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
 
         List<Subscription> eventsSubscribed;
         if (streamUpdate.getEventsRequested() != null && !streamUpdate.getEventsRequested().isEmpty()) {
-            eventsSubscribed = buildSubscriptions(streamUpdate.getEventsRequested());
+            eventsSubscribed = buildSubscriptions(streamUpdate.getEventsRequested(), caepProfile);
         } else {
             try {
                 eventsSubscribed = existing.getEventsSubscribed();
@@ -321,7 +370,6 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
                     "Error while updating the stream.", e.getMessage(), e);
         }
 
-        EventProfile caepProfile = getCaepEventProfile();
         return toStreamConfiguration(updatedWebhook, caepProfile, tenantDomain);
     }
 
@@ -331,6 +379,7 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
 
         Webhook existing = getStreamWebhook(streamReplacement.getStreamId(), tenantDomain);
         validateDeliveryMethod(streamReplacement);
+        EventProfile caepProfile = getCaepEventProfile();
 
         Map<String, Object> properties = new HashMap<>(existing.getProperties());
         if (streamReplacement.getDescription() != null) {
@@ -347,7 +396,7 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
                 .eventProfileName(existing.getEventProfileName())
                 .eventProfileUri(existing.getEventProfileUri())
                 .status(existing.getStatus())
-                .eventsSubscribed(buildSubscriptions(streamReplacement.getEventsRequested()))
+                .eventsSubscribed(buildSubscriptions(streamReplacement.getEventsRequested(), caepProfile))
                 .properties(properties)
                 .build();
 
@@ -360,7 +409,6 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
                     "Error while replacing the stream.", e.getMessage(), e);
         }
 
-        EventProfile caepProfile = getCaepEventProfile();
         return toStreamConfiguration(updatedWebhook, caepProfile, tenantDomain);
     }
 

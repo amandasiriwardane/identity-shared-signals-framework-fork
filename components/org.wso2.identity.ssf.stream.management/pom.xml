@@ -30,6 +30,11 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.subscription.management</artifactId>
+            <version>${carbon.identity.framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core</artifactId>
         </dependency>
         <dependency>
@@ -79,6 +84,7 @@
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
                             org.wso2.carbon.identity.core; version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.subscription.management.api.model; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.webhook.management.api.exception; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.webhook.management.api.model; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.webhook.management.api.service; version="${carbon.identity.framework.imp.pkg.version.range}",

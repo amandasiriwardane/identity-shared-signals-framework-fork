@@ -20,6 +20,7 @@
         <module>components/org.wso2.identity.ssf.stream.management</module>
         <module>components/org.wso2.identity.ssf.endpoint</module>
         <module>components/org.wso2.identity.event.ssf.publisher</module>
+        <module>components/org.wso2.identity.ssf.discovery</module>
     </modules>
 
     <properties>

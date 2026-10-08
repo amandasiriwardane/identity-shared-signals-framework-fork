@@ -313,7 +313,11 @@ public class SSFStreamManagementServiceImpl implements SSFStreamManagementServic
         List<StreamConfiguration> streams = new ArrayList<>();
         for (Webhook webhook : webhooks) {
             if (CAEP_EVENT_PROFILE_NAME.equalsIgnoreCase(webhook.getEventProfileName())) {
-                streams.add(toStreamConfiguration(webhook, caepProfile, tenantDomain));
+                // The list query returns a lightweight summary - eventsSubscribed and properties
+                // (so aud) are left at their default empty values, not lazily fetched. Re-fetch
+                // each stream individually to get its real events and aud.
+                Webhook enrichedWebhook = getStreamWebhook(webhook.getId(), tenantDomain);
+                streams.add(toStreamConfiguration(enrichedWebhook, caepProfile, tenantDomain));
             }
         }
         return streams;

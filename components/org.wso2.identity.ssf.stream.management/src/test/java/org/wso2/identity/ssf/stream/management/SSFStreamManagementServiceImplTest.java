@@ -184,6 +184,8 @@ public class SSFStreamManagementServiceImplTest {
                 .build();
         when(mockWebhookManagementService.getWebhooks(TENANT_DOMAIN))
                 .thenReturn(Arrays.asList(caepWebhook, wso2Webhook));
+        when(mockWebhookManagementService.getWebhook("caep-stream-id", TENANT_DOMAIN))
+                .thenReturn(caepWebhook);
 
         List<StreamConfiguration> result = service.getStreams(TENANT_DOMAIN);
 

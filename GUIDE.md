@@ -18,7 +18,6 @@ How to connect the Shared Signals Framework (SSF) / CAEP connector to a running 
 | `org.wso2.identity.ssf.endpoint.common-*.jar` | Shared OSGi lookup glue for the REST layer. |
 | `org.wso2.identity.ssf.endpoint.v1-*.jar` | The actual `/ssf/stream` and `/ssf/stream/status` REST API. |
 
-Build each from its own PR's branch (see the handover notes for the PR -> branch mapping).
 
 ## 2. Copy jars to `<IS_HOME>/repository/components/dropins/`
 
@@ -48,7 +47,7 @@ Find the `jaxrs.serviceClasses` init-param under the servlet block that already 
 org.wso2.identity.ssf.endpoint.v1.SsfApi,
 ```
 
-This is a manual step on every deployment - there's currently no packaging artifact that merges a `web.xml` fragment automatically.
+This is a manual step on every deployment
 
 ## 5. Exempt the discovery endpoint from authentication
 
@@ -107,3 +106,112 @@ In Console -> Applications -> (your application) -> Authorize APIs:
 - `GET https://<host>/.well-known/ssf-configuration` should return the discovery document, unauthenticated.
 - `POST https://<host>/api/server/v1/ssf/stream` with a valid token should create a stream and return a populated `aud`.
 - `GET` the same path (list) should also return populated `aud` / `events_requested` / `events_delivered` per stream, not empty arrays.
+
+## 10. Example requests
+
+Replace `<host>`, `<client_id>`, `<client_secret>`, and `<stream_id>` as needed. `-k` skips TLS verification, for a local server with a self-signed cert - drop it against a real one.
+
+### Discovery document (no auth)
+
+```bash
+curl -k https://<host>/.well-known/ssf-configuration
+```
+
+### Get an access token
+
+Scope must be explicitly requested - being authorized in Console only makes it *eligible*.
+
+```bash
+curl -k -X POST https://<host>/oauth2/token \
+  -u "<client_id>:<client_secret>" \
+  -d "grant_type=client_credentials&scope=ssf.read ssf.manage"
+```
+
+### Create a stream
+
+```bash
+curl -k -X POST https://<host>/api/server/v1/ssf/stream \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "delivery": {
+      "method": "urn:ietf:rfc:8935",
+      "endpoint_url": "https://example.com/webhook"
+    },
+    "events_requested": [
+      "https://schemas.openid.net/secevent/caep/event-type/session-established",
+      "https://schemas.openid.net/secevent/caep/event-type/session-revoked"
+    ],
+    "description": "Example receiver"
+  }'
+```
+
+### List all streams
+
+```bash
+curl -k https://<host>/api/server/v1/ssf/stream \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Get one stream
+
+```bash
+curl -k "https://<host>/api/server/v1/ssf/stream?stream_id=<stream_id>" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Partially update a stream (PATCH)
+
+```bash
+curl -k -X PATCH https://<host>/api/server/v1/ssf/stream \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stream_id": "<stream_id>",
+    "description": "Updated description"
+  }'
+```
+
+### Fully replace a stream (PUT)
+
+```bash
+curl -k -X PUT https://<host>/api/server/v1/ssf/stream \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stream_id": "<stream_id>",
+    "delivery": {
+      "method": "urn:ietf:rfc:8935",
+      "endpoint_url": "https://example.com/webhook-v2"
+    },
+    "events_requested": [
+      "https://schemas.openid.net/secevent/caep/event-type/session-established"
+    ]
+  }'
+```
+
+### Get a stream's status
+
+```bash
+curl -k "https://<host>/api/server/v1/ssf/stream/status?stream_id=<stream_id>" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Update a stream's status
+
+```bash
+curl -k -X POST https://<host>/api/server/v1/ssf/stream/status \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stream_id": "<stream_id>",
+    "status": "disabled"
+  }'
+```
+
+### Delete a stream
+
+```bash
+curl -k -X DELETE "https://<host>/api/server/v1/ssf/stream?stream_id=<stream_id>" \
+  -H "Authorization: Bearer <access_token>"
+```
